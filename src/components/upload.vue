@@ -19,7 +19,7 @@ export default {
 		protocol: 'https:',
 		loading: false
 	}),
-	props: ['fileStatus', 'auth', 'user', 'fileArr'],
+	props: ['fileStatus', 'auth', 'user', 'phone', 'fileArr'],
 	components: {
 		prog
 	},
@@ -28,7 +28,7 @@ export default {
 	},
 	computed: {
 		prefix() {
-			return this.protocol + '//' + this.Bucket + '.cos.' + this.Region + '.myqcloud.com/' + this.user + '/'
+			return this.protocol + '//' + this.Bucket + '.cos.' + this.Region + '.myqcloud.com/' + this.phone + '-' + this.user + '/'
 		}
 	},
 	methods: {
@@ -40,7 +40,7 @@ export default {
 				let Key = file.name; // 这里指定上传目录和文件名
 				this.getAuthorization({
 					Method: 'PUT',
-					Pathname: '/' + this.user + '/' + Key
+					Pathname: '/' + this.phone + '-' + this.user + '/' + Key
 				}, function (info) {
 					let auth = info.Authorization;
 					let XCosSecurityToken = info.XCosSecurityToken;
@@ -50,9 +50,6 @@ export default {
 					xhr.setRequestHeader('Authorization', auth);
 					XCosSecurityToken && xhr.setRequestHeader('x-cos-security-token', XCosSecurityToken);
 					xhr.upload.onprogress = function (e) {
-						// msg.innerHTML = '上传进度 ' + (Math.round(e.loaded / e.total * 10000) / 100) + '%<br/>' + msg.innerHTML;
-						// console.log('上传进度 ' + (Math.round(e.loaded / e.total * 10000) / 100) + '%');
-						// that.onupload = Math.round(e.loaded / e.total * 10000) / 100;
 						that.fileList[index].uploaded = e.loaded;
 					};
 					xhr.onload = function () {
@@ -88,6 +85,21 @@ export default {
 				.replace(/\(/g, '%28')
 				.replace(/\)/g, '%29')
 				.replace(/\*/g, '%2A');
+		}
+	},
+	watch: {
+		fileList: {
+			handler() {
+				if (this.loading) {
+					for (let file of this.fileList) {
+						if (file.size != file.uploaded) {
+							return;
+						}
+					}
+					this.$parent.current = 4;
+				}
+			},
+			deep: true
 		}
 	}
 }

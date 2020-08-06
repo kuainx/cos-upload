@@ -1,7 +1,7 @@
 <template>
 <div>
 	<span>{{file.name}} - {{uploaded}}/{{size}} - {{percent}}%</span>
-	<a-progress :percent="percent" status="active" />
+	<a-progress :percent="percent" :status="status" />
 </div>
 </template>
 <script>
@@ -9,7 +9,7 @@ export default {
 	name: "progress",
 	props: ['file'],
 	data: () => ({
-
+		status: 'active'
 	}),
 	methods: {
 		renderSize(value) {
@@ -34,6 +34,13 @@ export default {
 		},
 		size() {
 			return this.renderSize(this.file.size)
+		}
+	},
+	watch: {
+		percent() {
+			if (this.percent == 100) {
+				this.status = '';
+			}
 		}
 	}
 }

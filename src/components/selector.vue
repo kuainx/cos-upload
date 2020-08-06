@@ -4,10 +4,10 @@
 		<a-icon type="inbox" />
 	</p>
 	<p class="ant-upload-text">
-		Click or drag file to this area to upload
+		单击或拖拽文件至本区域以选择文件
 	</p>
 	<p class="ant-upload-hint">
-		Support for a single or bulk upload. Strictly prohibit from uploading company data or other band files
+		支持单文件/多文件选择，单个文件不得超过5GB
 	</p>
 </a-upload-dragger>
 </template>
@@ -33,11 +33,6 @@ export default {
 			console.log(file)
 			this.thisFileList = [...this.thisFileList, file];
 			return false;
-		},
-		handleChange(info) {
-			// window.fileArr = info.fileList;
-			console.log(info)
-			// this.$emit('change', info.fileList);
 		}
 	},
 	watch: {

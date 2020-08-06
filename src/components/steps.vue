@@ -1,57 +1,67 @@
 <template>
-<div class="steps">
+<div class="margin">
 	<a-steps :current="current">
-		<a-step title="Verification">
+		<a-step title="用户">
 			<a-icon slot="icon" type="solution" />
 		</a-step>
-		<a-step title="Login">
+		<a-step title="项目">
 			<a-icon slot="icon" type="user" />
 		</a-step>
-		<a-step title="Select">
+		<a-step title="选择文件">
 			<a-icon slot="icon" type="file-search" />
 		</a-step>
-		<a-step title="Upload">
+		<a-step title="上传文件">
 			<a-icon slot="icon" type="upload" />
 		</a-step>
+		<a-step title="完成">
+			<a-icon slot="icon" type="check-circle" />
+		</a-step>
 	</a-steps>
-	<div class="steps-content">
+	<div class="margin">
 		<div v-if="current==0">
-			<a-form-item has-feedback :validate-status="carderror" :help="cardhelp" :loading="cardloading">
-				<a-input v-model="card" placeholder="请输入激活码">
-					<a-icon slot="prefix" type="solution" />
-					<a-tooltip slot="suffix" title="请输入从商城购买的激活码">
-						<a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
-					</a-tooltip>
-				</a-input>
-			</a-form-item>
-			<a-button type="primary" @click="cardcheck" :disabled="carddisable" :loading="cardloading">
+			<a-input v-model="phone" placeholder="请输入手机号">
+				<a-icon slot="prefix" type="solution" />
+				<a-tooltip slot="suffix" title="请输入从商城下单时填写的联系方式">
+					<a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+				</a-tooltip>
+			</a-input>
+			<a-button class="margin" type="primary" @click="phonecheck" :disabled="phone.length==0" :loading="phoneloading">
 				校验
 				<a-icon type="right" />
 			</a-button>
 		</div>
 		<div v-if="current==1">
+			<div class="margin">
+				<a-radio-group v-model="orderselect">
+					<a-radio class="radio" :value="-1" disabled>
+						已注册项目
+					</a-radio>
+					<a-radio class="radio" v-for="order in orderList" :key="order.id" :value="order.id">
+						订单{{order.order_no}} - 内容：{{order.product_name}}
+					</a-radio>
+				</a-radio-group>
+			</div>
 			<a-input v-model="user" placeholder="请输入项目名">
 				<a-icon slot="prefix" type="user" />
-				<a-tooltip slot="suffix" title="新激活码输入项目自动注册，已用激活码输入设定项目名进入">
+				<a-tooltip slot="suffix" title="新订单输入项目自动注册，已用注册项目输入设定项目名进入">
 					<a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
 				</a-tooltip>
 			</a-input>
-			<div class="control">
+			<div class="margin">
 				<a-button-group>
 					<a-button type="primary" @click="current=0">
 						<a-icon type="left" />返回
 					</a-button>
-					<a-button type="primary" @click="usercheck" :loading="userloading" :disabled="user.length==0">
+					<a-button type="primary" @click="projcheck" :loading="userloading" :disabled="user.length==0">
 						提交
 						<a-icon type="right" />
 					</a-button>
 				</a-button-group>
 			</div>
-
 		</div>
 		<div v-if="current==2">
 			<selector v-model="fileList"></selector>
-			<div class="control">
+			<div class="margin">
 				<a-button-group>
 					<a-button type="primary" @click="current=1">
 						<a-icon type="left" />返回
@@ -64,16 +74,12 @@
 			</div>
 		</div>
 		<div v-if="current==3">
-			<upload :fileStatus="fileStatus" :auth="auth" :user="user" :fileArr="fileList"></upload>
+			<upload :fileStatus="fileStatus" :auth="auth" :user="user" :fileArr="fileList" :phone="phone"></upload>
 		</div>
-	</div>
-	<div class="steps-action">
-		<a-button type="primary" @click="next">
-			Next
-		</a-button>
-		<a-button style="margin-left: 8px" @click="prev">
-			Previous
-		</a-button>
+		<div v-if="current==4">
+			<a-result status="success" title="文件上传成功!" sub-title="素材已提交，我们预计在1-2天内通过您提供的联系方式联系您！">
+			</a-result>
+		</div>
 	</div>
 </div>
 </template>
@@ -85,42 +91,36 @@ export default {
 	name: "steps",
 	data: () => ({
 		current: 0,
-		carderror: '',
-		cardhelp: '',
-		cardloading: false,
-		carddisable: false,
-		card: '',
+		phoneloading: false,
+		phone: '',
+		orderList: [],
+		orderselect: 0,
+		projid: 0,
 		userloading: false,
 		user: '',
 		uploadloading: false,
 		fileList: [],
 		fileStatus: {},
-		auth: {},
-		onupload: 0
+		auth: {}
 	}),
 	components: {
 		selector,
 		upload
 	},
 	methods: {
-		next() {
-			this.current++;
-		},
-		prev() {
-			this.current--;
-		},
-		cardcheck() {
-			this.cardloading = true;
+		phonecheck() {
+			this.phoneloading = true;
 			$.ajax({
 				type: "post",
-				url: "//lifestudio.cn/up/api/api.php?t=cardvalid",
+				url: "//lifestudio.cn/up/api/api.php?t=phonevalid",
 				data: {
-					card: this.card
+					phone: this.phone
 				},
 				dataType: 'json',
 				success: (data) => {
 					console.log(data);
 					if (data.status == 0) {
+						this.orderList = data.ret;
 						this.current = 1;
 					} else {
 						this.$error({
@@ -128,7 +128,7 @@ export default {
 							content: '错误码：' + data.status + '，错误信息：' + data.ret,
 						});
 					}
-					this.cardloading = false;
+					this.phoneloading = false;
 				},
 				error: (xhr, err) => {
 					console.log(xhr, err);
@@ -136,23 +136,40 @@ export default {
 						title: '校验失败',
 						content: '网络错误：' + err,
 					});
-					this.cardloading = false;
+					this.phoneloading = false;
 				}
 			});
 		},
-		usercheck() {
+		projcheck() {
+			if (this.orderselect == 0) {
+				this.$error({
+					title: '提交失败',
+					content: '错误信息：请选择订单',
+				});
+			} else if (this.orderselect == -1) {
+				this.$error({
+					title: '提交失败',
+					content: '错误信息：该功能暂未开放',
+				});
+			} else {
+				this.newproj();
+			}
+		},
+		newproj() {
 			this.userloading = true;
 			$.ajax({
 				type: "post",
-				url: "//lifestudio.cn/up/api/api.php?t=uservaild",
+				url: "//lifestudio.cn/up/api/api.php?t=newproj",
 				data: {
-					card: this.card,
-					user: this.user
+					phone: this.phone,
+					id: this.orderselect,
+					proj: this.user
 				},
 				dataType: 'json',
 				success: (data) => {
 					console.log(data);
 					if (data.status == 0) {
+						this.projid = data.ret;
 						this.current = 2;
 					} else {
 						this.$error({
@@ -160,7 +177,7 @@ export default {
 							content: '错误码：' + data.status + '，错误信息：' + data.ret,
 						});
 					}
-					this.cardloading = false;
+					this.userloading = false;
 				},
 				error: (xhr, err) => {
 					console.log(xhr, err);
@@ -168,7 +185,7 @@ export default {
 						title: '提交失败',
 						content: '网络错误：' + err,
 					});
-					this.cardloading = false;
+					this.userloading = false;
 				}
 			});
 			this.userloading = false;
@@ -197,8 +214,9 @@ export default {
 						type: "post",
 						url: "//lifestudio.cn/up/api/api.php?t=getauth",
 						data: {
-							card: that.card,
-							user: that.user
+							phone: that.phone,
+							id: that.projid,
+							proj: that.user
 						},
 						dataType: 'json',
 						success: (data) => {
@@ -246,43 +264,18 @@ export default {
 				cancelText: '否',
 				okTest: '是'
 			});
-		},
-		uploadFile() {}
-	},
-	watch: {
-		card() {
-			if (this.card.length == 8) {
-				this.carderror = 'success';
-				this.cardhelp = '';
-				this.carddisable = false;
-			} else if (this.card.length == 0) {
-				this.carderror = '';
-				this.cardhelp = '';
-				this.carddisable = true;
-			} else {
-				this.carderror = 'error';
-				this.cardhelp = '激活码为8位';
-				this.carddisable = true;
-			}
 		}
 	}
 }
 </script>
 <style scoped>
-.steps {
+.margin {
 	margin: 10px;
 }
 
-.steps-content {
-	margin: 10px;
-}
-
-.control {
-	margin: 10px;
-}
-</style>
-<style>
-.ant-form-item-children-icon i svg {
-	margin-left: 40px !important;
+.radio {
+	display: block;
+	height: 30px;
+	line-height: 30px;
 }
 </style>
