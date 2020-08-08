@@ -47,6 +47,7 @@
 					<a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
 				</a-tooltip>
 			</a-input>
+			<a-textarea v-model="msg" placeholder="请输入备注" auto-size />
 			<div class="margin">
 				<a-button-group>
 					<a-button type="primary" @click="current=0">
@@ -98,6 +99,7 @@ export default {
 		projid: 0,
 		userloading: false,
 		user: '',
+		msg: '',
 		uploadloading: false,
 		fileList: [],
 		fileStatus: {},
@@ -112,7 +114,7 @@ export default {
 			this.phoneloading = true;
 			$.ajax({
 				type: "post",
-				url: "//lifestudio.cn/up/api/api.php?t=phonevalid",
+				url: "//faka.lifestudio.cn/up/api/api.php?t=phonevalid",
 				data: {
 					phone: this.phone
 				},
@@ -159,11 +161,12 @@ export default {
 			this.userloading = true;
 			$.ajax({
 				type: "post",
-				url: "//lifestudio.cn/up/api/api.php?t=newproj",
+				url: "//faka.lifestudio.cn/up/api/api.php?t=newproj",
 				data: {
 					phone: this.phone,
 					id: this.orderselect,
-					proj: this.user
+					proj: this.user,
+					msg: this.msg == '' ? '/' : this.msg
 				},
 				dataType: 'json',
 				success: (data) => {
@@ -212,7 +215,7 @@ export default {
 				onOk() {
 					$.ajax({
 						type: "post",
-						url: "//lifestudio.cn/up/api/api.php?t=getauth",
+						url: "//faka.lifestudio.cn/up/api/api.php?t=getauth",
 						data: {
 							phone: that.phone,
 							id: that.projid,

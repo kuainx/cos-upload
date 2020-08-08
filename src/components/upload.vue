@@ -88,7 +88,7 @@ export default {
 		renderQRCode() {
 			if (document.getElementById('qrcode')) {
 				QRCode.toCanvas(document.getElementById('qrcode'),
-					'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx61b12b15f8cbb912&redirect_uri=https%3a%2f%2flifestudio.cn%2fup%2fapi%2fserver.php&response_type=code&scope=snsapi_userinfo&state=' + this.phone +
+					'https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx61b12b15f8cbb912&redirect_uri=https%3a%2f%2ffaka.lifestudio.cn%2fup%2fapi%2fserver.php&response_type=code&scope=snsapi_userinfo&state=' + this.phone +
 					'#wechat_redirect',
 					function (error) {
 						if (error) console.error(error)
@@ -101,7 +101,7 @@ export default {
 		checkWechat() {
 			$.ajax({
 				type: "post",
-				url: "//lifestudio.cn/up/api/api.php?t=getwechat",
+				url: "//faka.lifestudio.cn/up/api/api.php?t=getwechat",
 				data: {
 					phone: this.phone
 				},
@@ -170,7 +170,7 @@ export default {
 					this.finishedajax = true;
 					$.ajax({
 						type: "post",
-						url: "//lifestudio.cn/up/api/api.php?t=finish",
+						url: "//faka.lifestudio.cn/up/api/api.php?t=finish",
 						data: {
 							phone: this.phone,
 							wechat: this.wechatnick,
