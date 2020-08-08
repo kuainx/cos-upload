@@ -10,7 +10,11 @@ switch ($T) {
             $a = $fakadb->prepare('SELECT `order_no`, `product_name`, `id` FROM `orders` WHERE `contact` = ? AND `status` =\'2\'');
             $a->execute(array($_POST['phone']));
             $res = $a->fetchAll();
-            $ret = array('status' => 0,'ret' => $res);
+            if (empty($res)) {
+                $ret = array('status' => 110002,'ret' => '用户校验失败');
+            } else {
+                $ret = array('status' => 0,'ret' => $res);
+            }
         }
         break;
 
@@ -77,6 +81,50 @@ switch ($T) {
                 );
                 $tempKeys = $sts->getTempKeys($config);
                 $ret = array('status' => 0,'ret' => $tempKeys);
+            }
+        }
+        break;
+
+    case 'getwechat':
+        if (strlen($_POST['phone']) == 0) {
+            $ret = array('status' => 140001,'ret' => '微信鉴权失败');
+        } else {
+            $a = $mysql->prepare('SELECT `user` FROM `wechat` WHERE `phone` = ?');
+            $a->execute(array($_POST['phone']));
+            $res = $a->fetchAll();
+            if (empty($res)) {
+                $ret = array('status' => 140002,'ret' => '微信鉴权失败');
+            } else {
+                $ret = array('status' => 0,'ret' => $res[0]['user']);
+            }
+        }
+        break;
+
+    case 'finish':
+        if (strlen($_POST['phone']) == 0 || strlen($_POST['proj']) == 0 || strlen($_POST['wechat']) == 0) {
+            $ret = array('status' => 150001,'ret' => '微信鉴权失败');
+        } else {
+            $a = $mysql->prepare('SELECT * FROM `order` WHERE `phone` = ? AND `user` = ?');
+            $a->execute(array($_POST['phone'],$_POST['proj']));
+            $res = $a->fetchAll();
+            if (empty($res)) {
+                $ret = array('status' => 150002,'ret' => '微信鉴权失败');
+            } else {
+                $a = $mysql->prepare('SELECT * FROM `wechat` WHERE `phone` = ? AND `user` = ?');
+                $a->execute(array($_POST['phone'],$_POST['wechat']));
+                $res1 = $a->fetchAll();
+                if (empty($res1)) {
+                    $ret = array('status' => 150003,'ret' => '微信鉴权失败');
+                } else {
+                    $a = $fakadb->prepare('SELECT * FROM `orders` WHERE `order_no` = ?');
+                    $a->execute(array($res[0]['order']));
+                    $res = $a->fetchAll();
+                    include('./wx.php');
+                    $ret = getAccessToken();
+                    $accessToken = $ret['access_token'];
+                    sendTemplateMessage(array('openid' => $res1[0]['openid'],'order' => $_POST['phone'].'-'.$_POST['proj'],'user' => $res[0]['product_name'],'msg' => '/'),$accessToken);
+                    $ret = array('status' => 0,'ret' => 'success');
+                }
             }
         }
         break;

@@ -12,6 +12,7 @@
     "ant-design-vue": "^1.6.4",
     "core-js": "^3.6.5",
     "jquery": "^3.5.1",
+    "qrcode": "^1.4.4",
     "vue": "^2.6.11"
   },
   "devDependencies": {
