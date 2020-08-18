@@ -2,23 +2,14 @@
 <div id="container">
 	<div id="app">
 		<img alt="logo" src="./assets/logo.png" class="logo">
-		<steps></steps>
-
+		<router-view></router-view>
 	</div>
 </div>
 </template>
 
 <script>
-import steps from './components/steps.vue'
-
 export default {
-	name: 'App',
-	components: {
-		steps
-	},
-	data: () => ({
-
-	}),
+	name: 'App'
 }
 </script>
 
