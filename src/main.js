@@ -4,6 +4,8 @@ Vue.use(VueRouter);
 import Antd from 'ant-design-vue';
 import 'ant-design-vue/dist/antd.css';
 Vue.use(Antd);
+import VueClipboard from 'vue-clipboard2'
+Vue.use(VueClipboard)
 
 import App from './App.vue'
 import Steps from './components/steps.vue'

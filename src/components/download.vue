@@ -37,7 +37,7 @@
 					<a-button type="primary" @click="current=0">
 						<a-icon type="left" />返回
 					</a-button>
-					<a-button type="primary" @click="projcheck" :loading="userloading" :disabled="user.length==0">
+					<a-button type="primary" @click="projcheck" :loading="userloading" :disabled="orderselect<0">
 						提交
 						<a-icon type="right" />
 					</a-button>
@@ -45,6 +45,15 @@
 			</div>
 		</div>
 		<div v-if="current==2">
+			<div class="margin">
+				<a-button type="primary" @click="download">
+					点击下载文件 {{orderList[orderselect]['file']}}
+				</a-button>
+				<span class="ant-btn ant-btn-link" v-clipboard:copy="link" v-clipboard:success="onCopy" v-clipboard:error="onError">点击复制链接</span>
+			</div>
+			<a-button type="primary" @click="download1">
+				无法下载请点击
+			</a-button>
 
 			<div class="margin">
 				<a-button-group>
@@ -66,22 +75,14 @@ export default {
 		phoneloading: false,
 		phone: '',
 		orderList: [],
-		orderselect: 0,
-		projid: 0,
-		userloading: false,
-		user: '',
-		msg: '',
-		uploadloading: false,
-		fileList: [],
-		fileStatus: {},
-		auth: {}
+		orderselect: -1,
 	}),
 	methods: {
 		phonecheck() {
 			this.phoneloading = true;
 			$.ajax({
 				type: "post",
-				url: "//faka.lifestudio.cn/up/api/api.php?t=phonevalid",
+				url: "//faka.lifestudio.cn/up/api/api.php?t=getproj",
 				data: {
 					phone: this.phone
 				},
@@ -110,130 +111,38 @@ export default {
 			});
 		},
 		projcheck() {
-			if (this.orderselect == 0) {
-				this.$error({
-					title: '提交失败',
-					content: '错误信息：请选择订单',
-				});
-			} else if (this.orderselect == -1) {
-				this.$error({
-					title: '提交失败',
-					content: '错误信息：该功能暂未开放',
+			if (this.orderList[this.orderselect]['file'] == '') {
+				this.$warning({
+					title: '提示',
+					content: '该项目暂未完成，请耐心等待',
 				});
 			} else {
-				this.newproj();
+				this.current = 2;
 			}
 		},
-		newproj() {
-			this.userloading = true;
-			$.ajax({
-				type: "post",
-				url: "//faka.lifestudio.cn/up/api/api.php?t=newproj",
-				data: {
-					phone: this.phone,
-					id: this.orderselect,
-					proj: this.user,
-					msg: this.msg == '' ? '/' : this.msg
-				},
-				dataType: 'json',
-				success: (data) => {
-					console.log(data);
-					if (data.status == 0) {
-						this.projid = data.ret;
-						this.current = 2;
-					} else {
-						this.$error({
-							title: '提交失败',
-							content: '错误码：' + data.status + '，错误信息：' + data.ret,
-						});
-					}
-					this.userloading = false;
-				},
-				error: (xhr, err) => {
-					console.log(xhr, err);
-					this.$error({
-						title: '提交失败',
-						content: '网络错误：' + err,
-					});
-					this.userloading = false;
-				}
-			});
-			this.userloading = false;
+		download() {
+			let a = document.createElement('a');
+			a.href = this.link;
+			a.click();
 		},
-		uploadcheck() {
-			this.uploadloading = true;
-			let filename = [];
-			for (let file of this.fileList) {
-				if (filename.indexOf(file.name) != -1) {
-					this.$error({
-						title: '提交失败',
-						content: '错误信息：文件池中不得有重名文件'
-					});
-					this.uploadloading = false;
-					return;
-				} else {
-					filename.push(file.name);
-				}
+		onCopy() {
+			this.$message.success("链接已复制到剪切板！");
+		},
+		onError() {
+			this.$message.error("抱歉，链接复制失败！");
+		},
+		download1() {
+			window.open(this.link);
+		}
+	},
+	computed: {
+		link() {
+			if (this.orderList[this.orderselect]) {
+				let b = this.orderList[this.orderselect];
+				return "https://life-down-1252428915.cos.ap-guangzhou.myqcloud.com/" + b['phone'] + '-' + b['user'] + '/' + b['file'];
+			} else {
+				return '';
 			}
-			let that = this;
-			this.$confirm({
-				title: '是否确认上传？',
-				content: '上传后无法取消或修改',
-				onOk() {
-					$.ajax({
-						type: "post",
-						url: "//faka.lifestudio.cn/up/api/api.php?t=getauth",
-						data: {
-							phone: that.phone,
-							id: that.projid,
-							proj: that.user
-						},
-						dataType: 'json',
-						success: (data) => {
-							console.log(data);
-							if (data.status == 0) {
-								if (!data.ret.credentials) {
-									that.$error({
-										title: '提交失败',
-										content: '错误信息：服务端错误',
-									});
-								} else {
-									that.auth = data.ret;
-									that.fileStatus = [];
-									for (let index in that.fileList) {
-										that.fileStatus.push({
-											name: that.fileList[index].name,
-											size: that.fileList[index].size,
-											index: index,
-											uploaded: 0
-										})
-									}
-									that.current = 3;
-								}
-							} else {
-								that.$error({
-									title: '提交失败',
-									content: '错误码：' + data.status + '，错误信息：' + data.ret,
-								});
-							}
-							that.uploadloading = false;
-						},
-						error: (xhr, err) => {
-							console.log(xhr, err);
-							that.$error({
-								title: '提交失败',
-								content: '网络错误：' + err,
-							});
-							that.uploadloading = false;
-						}
-					});
-				},
-				onCancel() {
-					that.uploadloading = false;
-				},
-				cancelText: '否',
-				okTest: '是'
-			});
 		}
 	}
 }

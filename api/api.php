@@ -128,6 +128,21 @@ switch ($T) {
             }
         }
         break;
+	
+	case 'getproj':
+		if (strlen($_POST['phone']) == 0) {
+			$ret = array('status' => 160001,'ret' => '项目校验失败');
+		} else {
+			$a = $mysql->prepare('SELECT * FROM `order` WHERE `phone` = ? ');
+			$a->execute(array($_POST['phone']));
+			$res = $a->fetchAll();
+			if (empty($res)) {
+				$ret = array('status' => 160002,'ret' => '项目校验失败，未查询到订单');
+			} else {
+				$ret = array('status' => 0,'ret' => $res);
+			}
+		}
+		break;
 
     default:
         $ret = array('status' => 170001,'ret' => 'Request denied');
